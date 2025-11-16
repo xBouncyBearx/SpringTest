@@ -1,13 +1,12 @@
 package com.example.springtest.Repository;
 
-import com.example.springtest.Entity.LoginDetail;
+import com.example.springtest.DTO.LoginRequest;
+import com.example.springtest.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
-
 @Repository
-public interface UserRepo extends JpaRepository<LoginDetail, UUID> {
+public interface UserRepo extends JpaRepository<User, Long> {
 
-    LoginDetail findByUsername(String username);
+    User findByNID(String NID);
 }

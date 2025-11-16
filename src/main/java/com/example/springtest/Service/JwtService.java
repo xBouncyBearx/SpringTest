@@ -3,17 +3,21 @@ package com.example.springtest.Service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
-@Component
+@Service
 public class JwtService {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    String secret = "my-super-secret-key-that-is-long-enough-123";
+    SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 
     public String generateToken(String username) {
+        System.out.println(key);
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
@@ -28,6 +32,8 @@ public class JwtService {
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
+            return true;
+        }catch (io.jsonwebtoken.ExpiredJwtException e) {
             return true;
         } catch (Exception e) {
             return false;

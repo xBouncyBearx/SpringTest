@@ -2,6 +2,8 @@ package com.example.springtest.Security;
 
 import com.example.springtest.Service.JwtService;
 import java.io.IOException;
+import java.util.Collections;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,25 +26,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/auth/login") || path.startsWith("/auth/register") || path.contains("swagger-ui");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = extractTokenFromRequest(request);
 
+            if (token == null || token.isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token missing");
+                return;
+            }
+
             if (jwtService.isTokenValid(token)) {
-                // بررسی انقضای توکن
                 if (jwtService.isTokenExpired(token)) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.getWriter().write("Token expired");
                     return;
                 }
 
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(jwtService.extractUsername(token), null);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(jwtService.extractUsername(token), null, Collections.emptyList());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            }else{
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token invalid");
+                return;
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication", e);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Authentication error");
+            return;
         }
 
         filterChain.doFilter(request, response);

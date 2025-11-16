@@ -2,13 +2,17 @@ package com.example.springtest.Service;
 
 import com.example.springtest.Entity.LoginDetail;
 import com.example.springtest.Repository.UserRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
     private final UserRepo userRepo;
-    public AuthService(UserRepo userRepo) {
+    private final JwtService jwtService;
+    @Autowired
+    public AuthService(UserRepo userRepo, JwtService jwtService) {
         this.userRepo = userRepo;
+        this.jwtService = jwtService;
     }
 
     public String Register(LoginDetail loginDetail) {
@@ -27,7 +31,7 @@ public class AuthService {
         if(!user.getPassword().equals(loginDetail.getPassword())) {
             return "invalid password";
         }else{
-            return "success";
+            return jwtService.generateToken(loginDetail.getUsername());
         }
     }
 }
